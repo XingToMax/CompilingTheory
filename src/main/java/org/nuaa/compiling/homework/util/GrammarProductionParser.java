@@ -51,4 +51,33 @@ public class GrammarProductionParser {
         }
         return labels;
     }
+
+    /**
+     * 增加适配
+     * @param grammar
+     * @param production
+     * @return
+     */
+    public static List<String> splitCompleteProductionToLabels(GrammarBean grammar, String production) {
+        // TODO : 输入校验
+        production = production.split("=>")[1];
+        return splitProductionToLabels(grammar, production);
+    }
+
+
+    /**
+     * 构造完整的产生式
+     * @param label
+     * @param segment
+     * @return
+     */
+    public static String constructProduction(String label, List<String> segment) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(label);
+        builder.append("=>");
+        for (String in : segment) {
+            builder.append(in);
+        }
+        return builder.toString();
+    }
 }

@@ -2,6 +2,7 @@ package org.nuaa.compiling.homework;
 
 import org.nuaa.compiling.homework.bean.GrammarBean;
 import org.nuaa.compiling.homework.core.GrammarSetConstruct;
+import org.nuaa.compiling.homework.core.PredictAnalyzeTableConstruct;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -23,5 +24,7 @@ public class App {
         GrammarBean grammar = new GrammarBean( "+,$,*,(,),i","E,T,P,Q,F", "E",prduction);
         GrammarSetConstruct.constructFirstSet(grammar);
         GrammarSetConstruct.constructFollowSet(grammar);
+        PredictAnalyzeTableConstruct.construct(grammar);
+        System.out.println(PredictAnalyzeTableConstruct.analyze("(i*i+i)", grammar));
     }
 }
