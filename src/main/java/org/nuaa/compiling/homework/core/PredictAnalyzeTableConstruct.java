@@ -4,10 +4,7 @@ import org.nuaa.compiling.homework.bean.GrammarBean;
 import org.nuaa.compiling.homework.constant.GrammarConst;
 import org.nuaa.compiling.homework.util.GrammarProductionParser;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @Author: ToMax
@@ -45,6 +42,12 @@ public class PredictAnalyzeTableConstruct {
         if (target == null || target.isEmpty()) {
             return true;
         }
+
+        /**
+         * 用于记录分析过程
+         */
+        List<String[]> processRecord = new LinkedList<>();
+
         // 构造符号栈和输入串
         LinkedList<String> inputString = new LinkedList<>();
         LinkedList<String> labelStack = new LinkedList<>();
@@ -56,6 +59,10 @@ public class PredictAnalyzeTableConstruct {
             inputString.add(String.valueOf(target.charAt(i)));
         }
         inputString.add("#");
+
+        // 初始化分析
+        generateRecord(processRecord, labelStack, inputString, "");
+
         // 匹配直至符号串为空
         while (!labelStack.isEmpty()) {
             // 构造单元格
@@ -64,6 +71,8 @@ public class PredictAnalyzeTableConstruct {
             // 无法推导，出错
             if (production == null || inputString.isEmpty()) {
                 // TODO : 构造出错信息
+                generateRecord(processRecord, labelStack, inputString, "error");
+                grammar.setProcessRecord(processRecord);
                 return false;
             }
             List<String> list = GrammarProductionParser.splitCompleteProductionToLabels(grammar, production);
@@ -76,12 +85,17 @@ public class PredictAnalyzeTableConstruct {
                 }
             }
 
+            generateRecord(processRecord, labelStack, inputString, production);
+
             // 同时移除匹配元素
             while (!labelStack.isEmpty() && !inputString.isEmpty() && labelStack.getFirst().equals(inputString.getFirst())) {
                 labelStack.removeFirst();
                 inputString.removeFirst();
+                generateRecord(processRecord, labelStack, inputString, "");
             }
         }
+
+        grammar.setProcessRecord(processRecord);
         // 顺利匹配结束，返回匹配成功
         return true;
     }
@@ -128,5 +142,29 @@ public class PredictAnalyzeTableConstruct {
 
         // 未找到，应该出错，因为私有方法，程序不会执行到该步
         return null;
+    }
+
+    /**
+     * 生成记录
+     * @param record
+     * @param labelStack
+     * @param inputString
+     * @param production
+     */
+    private static void generateRecord(List<String[]> record, LinkedList<String> labelStack, LinkedList<String> inputString, String production) {
+        String[] row = new String[4];
+        row[0] = String.valueOf(record.size());
+        String labelStackString = "";
+        for (String in : labelStack) {
+            labelStackString = in + labelStackString;
+        }
+        row[1] = labelStackString;
+        StringBuilder inputStringBuilder = new StringBuilder();
+        for (String in : inputString) {
+            inputStringBuilder.append(in);
+        }
+        row[2] = inputStringBuilder.toString();
+        row[3] = production;
+        record.add(row);
     }
 }

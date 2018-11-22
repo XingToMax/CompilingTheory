@@ -45,6 +45,7 @@ public class GrammarBean {
      * 预测分析表
      */
     private Map<String, String> predictAnalyzeTable;
+    private List<String[]> processRecord;
 
 
     public GrammarBean() {
@@ -219,5 +220,13 @@ public class GrammarBean {
 
     public void setPredictAnalyzeTable(Map<String, String> predictAnalyzeTable) {
         this.predictAnalyzeTable = predictAnalyzeTable;
+    }
+
+    public List<String[]> getProcessRecord() {
+        return processRecord;
+    }
+
+    public void setProcessRecord(List<String[]> processRecord) {
+        this.processRecord = processRecord;
     }
 }
