@@ -55,10 +55,11 @@ public class PredictAnalyzeTableConstruct {
         labelStack.push("#");
         labelStack.push(grammar.getStartLabel());
         // 初始化输入串
-        for (int i = 0; i < target.length(); i++) {
-            inputString.add(String.valueOf(target.charAt(i)));
-        }
-        inputString.add("#");
+        inputString = buildInputStringStack(target, grammar);
+//        for (int i = 0; i < target.length(); i++) {
+//            inputString.add(String.valueOf(target.charAt(i)));
+//        }
+//        inputString.add("#");
 
         // 初始化分析
         generateRecord(processRecord, labelStack, inputString, "");
@@ -166,5 +167,30 @@ public class PredictAnalyzeTableConstruct {
         row[2] = inputStringBuilder.toString();
         row[3] = production;
         record.add(row);
+    }
+
+    /**
+     * 构建输入串
+     * @param inputString
+     * @param grammar
+     * @return
+     */
+    private static LinkedList<String> buildInputStringStack(String inputString, GrammarBean grammar) {
+        LinkedList<String> inputStringList = new LinkedList<>();
+        int index = 0;
+        StringBuilder builder = new StringBuilder();
+        while (index < inputString.length()) {
+            builder.append(inputString.charAt(index));
+            index++;
+            if (grammar.getEndLabelSet().contains(builder.toString())) {
+                inputStringList.add(builder.toString());
+                builder = new StringBuilder();
+            }
+        }
+        if (builder.length() > 0) {
+            inputStringList.add(builder.toString());
+        }
+        inputStringList.add("#");
+        return inputStringList;
     }
 }

@@ -16,6 +16,10 @@ import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -45,6 +49,14 @@ public class LLAnalyze {
     private JTextArea textArea4;
     private JTable table3;
     private JTable table4;
+    private JButton importButton;
+    private JLabel statusIcon;
+    private JPanel inputPanel;
+    private JScrollPane firstPanel;
+    private JScrollPane followPanel;
+    private JScrollPane prePanel;
+    private JPanel appPanel;
+    private JScrollPane anaPanel;
     private GrammarBean grammar;
 
     public static void execute() {
@@ -52,7 +64,7 @@ public class LLAnalyze {
         LLAnalyze analyze = new LLAnalyze();
         frame.setContentPane(analyze.tabbedPane1);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setPreferredSize(new Dimension(3200, 2000));
+        frame.setPreferredSize(new Dimension(3200, 1600));
         frame.pack();
         frame.setVisible(true);
 
@@ -73,7 +85,10 @@ public class LLAnalyze {
         analyze.table3.setFont(font);
         analyze.table4.setFont(font);
         analyze.judgeButton.setFont(font);
+        analyze.importButton.setFont(font);
         analyze.textArea4.setFont(font);
+        analyze.textArea4.setLineWrap(true);
+        analyze.textArea4.setWrapStyleWord(true);
         analyze.inputStringLabel.setFont(font);
         analyze.table1.getTableHeader().setPreferredSize(new Dimension(analyze.table1.getTableHeader().getWidth(), 50));
         analyze.table2.getTableHeader().setPreferredSize(new Dimension(analyze.table1.getTableHeader().getWidth(), 50));
@@ -87,6 +102,12 @@ public class LLAnalyze {
         analyze.table2.setRowHeight(50);
         analyze.table3.setRowHeight(50);
         analyze.table4.setRowHeight(50);
+        analyze.inputPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 300, 50));
+        analyze.firstPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 300, 50));
+        analyze.followPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 300, 50));
+        analyze.prePanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 300, 50));
+        analyze.appPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 300, 50));
+        analyze.anaPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 300, 50));
         analyze.tabbedPane1.repaint();
 
         analyze.buildButton.addActionListener(new ActionListener() {
@@ -106,10 +127,23 @@ public class LLAnalyze {
                 for (String in : list) {
                     productionList.add(in);
                 }
-                GrammarBean grammar = new GrammarBean(endLabel, notEndLabel, startLabel, productionList);
-                analyze.setGrammar(grammar);
+                GrammarBean grammar = null;
+                try {
+                    grammar = new GrammarBean(endLabel, notEndLabel, startLabel, productionList);
+                } catch (Exception e1) {
+                    JOptionPane.showMessageDialog(analyze.tabbedPane1, "组建失败，初始化语法错误", "组建状态",JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
 
-                Map<String, Set<String>> firstSet = GrammarSetConstruct.constructFirstSet(grammar);
+                analyze.setGrammar(grammar);
+                Map<String, Set<String>> firstSet = null;
+                try {
+                    firstSet = GrammarSetConstruct.constructFirstSet(grammar);
+                } catch (Exception e1) {
+                    JOptionPane.showMessageDialog(analyze.tabbedPane1, "组建失败，构建FIRST语法错误", "组建状态",JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
                 String[][] firstTable = new String[firstSet.size()][2];
                 int rowNum = 0;
                 for (Map.Entry<String, Set<String>> entry : firstSet.entrySet()) {
@@ -126,7 +160,14 @@ public class LLAnalyze {
                         firstTable, new String[]{"符号", "集合"}
                 ));
 
-                Map<String, Set<String>> followSet = GrammarSetConstruct.constructFollowSet(grammar);
+                Map<String, Set<String>> followSet = null;
+                try {
+                    followSet = GrammarSetConstruct.constructFollowSet(grammar);
+                } catch (Exception e1) {
+                    JOptionPane.showMessageDialog(analyze.tabbedPane1, "组建失败，构建FOLLOW语法错误", "组建状态",JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
                 String[][] followTable = new String[followSet.size()][2];
                 rowNum = 0;
                 for (Map.Entry<String, Set<String>> entry : followSet.entrySet()) {
@@ -146,8 +187,12 @@ public class LLAnalyze {
                                 }
                         )
                 );
-
-                PredictAnalyzeTableConstruct.construct(grammar);
+                try {
+                    PredictAnalyzeTableConstruct.construct(grammar);
+                } catch (Exception e1) {
+                    JOptionPane.showMessageDialog(analyze.tabbedPane1, "组建失败，构建分析预测表语法错误", "组建状态",JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 List<String> head = new ArrayList<>();
                 head.add(" ");
                 for (String in : grammar.getEndLabelSet()) {
@@ -173,6 +218,7 @@ public class LLAnalyze {
                 analyze.table1.setModel(model);
                 analyze.table1.repaint();
                 frame.repaint();
+                JOptionPane.showMessageDialog(analyze.tabbedPane1, "组建成功", "组建状态",JOptionPane.INFORMATION_MESSAGE);
             }
         });
 
@@ -181,11 +227,11 @@ public class LLAnalyze {
             public void actionPerformed(ActionEvent e) {
                 String inputString = analyze.textArea4.getText();
                 boolean result = PredictAnalyzeTableConstruct.analyze(inputString, analyze.getGrammar());
-                if (result) {
-                    JOptionPane.showMessageDialog(analyze.tabbedPane1, "accept", "状态",JOptionPane.WARNING_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(analyze.tabbedPane1, "not accept", "状态",JOptionPane.WARNING_MESSAGE);
-                }
+//                if (result) {
+//                    JOptionPane.showMessageDialog(analyze.tabbedPane1, "accept", "状态",JOptionPane.WARNING_MESSAGE);
+//                } else {
+//                    JOptionPane.showMessageDialog(analyze.tabbedPane1, "not accept", "状态",JOptionPane.WARNING_MESSAGE);
+//                }
 
                 List<String[]> record = analyze.getGrammar().getProcessRecord();
                 Object[][] table = new Object[record.size()][4];
@@ -202,9 +248,59 @@ public class LLAnalyze {
                 analyze.table2.setModel(new DefaultTableModel(
                         table, new Object[]{"步骤", "符号栈", "输入串", "所用产生式"}
                 ));
+                analyze.tabbedPane1.setSelectedIndex(5);
+
+                if (result) {
+                    analyze.statusIcon.setIcon(new ImageIcon(this.getClass().getResource("/").getPath() + "right.png"));
+                } else {
+                    analyze.statusIcon.setIcon(new ImageIcon(this.getClass().getResource("/").getPath() + "error.png"));
+                }
                 analyze.table2.repaint();
             }
         });
+
+        analyze.importButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser jfc=new JFileChooser();
+                jfc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES );
+                jfc.showDialog(new JLabel(), "选择");
+                File file=jfc.getSelectedFile();
+                if(file.isDirectory()){
+                    System.out.println("文件夹:"+file.getAbsolutePath());
+                }else if(file.isFile()){
+                    System.out.println("文件:"+file.getAbsolutePath());
+                }
+
+                try {
+                    FileInputStream inputStream = new FileInputStream(file.getAbsolutePath());
+                    Scanner scanner = new Scanner(inputStream);
+
+                    analyze.textField1.setText(filterNull(scanner.nextLine()));
+                    analyze.textField2.setText(filterNull(scanner.nextLine()));
+                    analyze.textField4.setText(filterNull(scanner.nextLine()));
+                    StringBuilder builder = new StringBuilder();
+                    while (scanner.hasNext()) {
+                        String line = scanner.nextLine();
+                        if (!line.contains("=>")) {
+                            break;
+                        }
+                        builder.append(line);
+                        builder.append("\n");
+                    }
+                    analyze.textArea1.setText(builder.toString());
+                    inputStream.close();
+                } catch (FileNotFoundException e1) {
+                    e1.printStackTrace();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public static String filterNull(String content) {
+        return content != null ? content : "";
     }
 
     public GrammarBean getGrammar() {
